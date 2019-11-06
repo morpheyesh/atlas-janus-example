@@ -7,5 +7,5 @@ Simple Java example using JanusGraph 0.4.0
 
 ```
 mvn clean package
-mvn exec:java -Dexec.mainClass="atlas.janusgraph.example.JavaExample"
+mvn exec:java -Dexec.mainClass="atlas.janusgraph.example.AtlasJanus"
 ```
