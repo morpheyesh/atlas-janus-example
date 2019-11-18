@@ -2,6 +2,8 @@ package atlas.janusgraph.example;
 
 import org.apache.atlas.ApplicationProperties;
 import org.apache.atlas.AtlasException;
+import org.apache.atlas.repository.graphdb.AtlasGraphQuery;
+import org.apache.atlas.repository.graph.AtlasGraphProvider;
 import org.apache.atlas.repository.graphdb.janus.serializer.TypeCategorySerializer;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.janusgraph.core.JanusGraph;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import org.apache.atlas.typesystem.types.DataTypes.TypeCategory;
 
@@ -23,6 +26,9 @@ import org.apache.atlas.repository.graphdb.janus.serializer.BigIntegerSerializer
 import org.apache.commons.configuration.Configuration;
 
 import static org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphDatabase.GRAPH_PREFIX;
+import static org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphDatabase.SOLR_ZOOKEEPER_URL;
+import static org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphDatabase.SOLR_ZOOKEEPER_URLS;
+import static org.apache.commons.configuration.ConfigurationConverter.getConfiguration;
 
 
 public class AtlasJanus {
@@ -30,11 +36,13 @@ public class AtlasJanus {
 
 
     public static Configuration getConfig() throws AtlasException {
-        Configuration configProperties = ApplicationProperties.get();
+       Configuration configProperties = ApplicationProperties.get();
 
 
-        //configProperties.setProperty(SOLR_ZOOKEEPER_URLS, configProperties.getStringArray(SOLR_ZOOKEEPER_URL));
+        configProperties.setProperty(SOLR_ZOOKEEPER_URLS, configProperties.getStringArray(SOLR_ZOOKEEPER_URL));
         Configuration janusConfig = ApplicationProperties.getSubsetConfiguration(configProperties, GRAPH_PREFIX);
+
+
 
         //add serializers for non-standard property value types that Atlas uses
         janusConfig.addProperty("attributes.custom.attribute1.attribute-class", TypeCategory.class.getName());
@@ -72,6 +80,7 @@ public class AtlasJanus {
 //            createMixedIndexes(management);
 //            management.commit();
 
+            //https://developer.ibm.com/articles/apache-atlas-and-janusgraph-graph-based-meta-data-management/
             management.get("storage.hbase.table");
             management.get("index.search.backend");
             management.get("index.search.index-name");
@@ -84,14 +93,23 @@ public class AtlasJanus {
     public static void main(String[] args) {
         try {
             Configuration config = getConfig();
-            System.out.println("==============Starting janus object=======================");
-            JanusGraph graph = JanusGraphFactory.open("conf/janusgraph-hbase-solr.properties");
+            System.out.println("================== Starting janus object >=======================");
 
-            AtlasJanus jg = new AtlasJanus();
-            jg.managementApi(graph);
+            AtlasGraphQuery query = AtlasGraphProvider
+                    .getGraphInstance().query().has("__typeName", "hive_table").has("owner", "root")
+                    .has("__state", "ACTIVE");
 
-            GraphTraversalSource g = graph.traversal();
-            g.close();
+            System.out.println("================== Started janus object =======================");
+
+
+//            JanusGraph graph = JanusGraphFactory.open("conf/janusgraph-hbase-solr.properties");
+//            //JanusGraph graph = JanusGraphFactory.open(getConfiguration(config));
+//
+//            AtlasJanus jg = new AtlasJanus();
+//            jg.managementApi(graph);
+//
+//            GraphTraversalSource g = graph.traversal();
+//            g.close();
 
         } catch (Exception e) {
             System.out.println(e);
